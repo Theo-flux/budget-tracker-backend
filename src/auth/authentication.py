@@ -2,10 +2,11 @@ from fastapi import Depends
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 import jwt
+from jwt import PyJWTError, ExpiredSignatureError
 import uuid
 import logging
 
-from config import Config
+from src.config import Config
 
 
 class Authentication:
@@ -47,6 +48,9 @@ class Authentication:
             )
 
             return token_data
-        except jwt.PyJWTError as e:
-            logging.exception(e)
-            raise None
+        except ExpiredSignatureError:
+            logging.warning("Token has expired.")
+            raise Exception("Token has expired.")
+        except PyJWTError:
+            logging.exception("JWT decoding failed.")
+            raise Exception("Invalid token.")

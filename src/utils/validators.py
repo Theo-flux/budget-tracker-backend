@@ -1,5 +1,6 @@
 from email_validator import EmailNotValidError, EmailSyntaxError
 from pydantic import validate_email
+from email.utils import parseaddr
 
 
 def email_validator(value: str):
@@ -8,3 +9,7 @@ def email_validator(value: str):
         return value
     except EmailNotValidError:
         raise EmailSyntaxError("Invalid Email format")
+
+
+def is_email(value):
+    return "@" in parseaddr(value)[1]
