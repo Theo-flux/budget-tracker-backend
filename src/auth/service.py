@@ -3,11 +3,11 @@ from fastapi.responses import JSONResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.auth.schemas import TokenUserModel
+from src.db.redis import add_jti_to_block_list
+from src.misc.schemas import ServerRespModel
+from src.users.service import UserService
 
 from .authentication import Authentication
-from src.misc.schemas import ServerRespModel
-from src.db.redis import add_jti_to_block_list
-from src.users.service import UserService
 
 user_service = UserService()
 

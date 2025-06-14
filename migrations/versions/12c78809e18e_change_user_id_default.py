@@ -1,8 +1,8 @@
-"""update password field
+"""change user id default
 
-Revision ID: 4ee0c55cb5f9
-Revises: 22684d007c15
-Create Date: 2025-06-03 06:06:26.096389
+Revision ID: 12c78809e18e
+Revises: 4ee0c55cb5f9
+Create Date: 2025-06-14 20:25:04.638575
 
 """
 
@@ -13,8 +13,8 @@ import sqlmodel
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "4ee0c55cb5f9"
-down_revision: Union[str, None] = "22684d007c15"
+revision: str = "12c78809e18e"
+down_revision: Union[str, None] = "4ee0c55cb5f9"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

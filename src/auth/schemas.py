@@ -1,7 +1,8 @@
-from typing import Optional
-from pydantic import BaseModel, ConfigDict, field_validator
-from datetime import datetime
 import uuid
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from src.utils.validators import email_validator
 

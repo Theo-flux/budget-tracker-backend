@@ -1,5 +1,6 @@
 from typing import Optional
-from fastapi import HTTPException, Request, status
+
+from fastapi import Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from src.auth.authentication import Authentication
@@ -17,20 +18,15 @@ class TokenBearer(HTTPBearer):
         try:
             token = Authentication().decode_token(token)
             return True
-        except:
+        except Exception:
             return False
 
-    async def __call__(
-        self, request: Request
-    ) -> Optional[HTTPAuthorizationCredentials]:
+    async def __call__(self, request: Request) -> Optional[HTTPAuthorizationCredentials]:
         cred = await super().__call__(request)
         token = cred.credentials
 
         if self.is_token_valid(token) is False:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Invalid or expired token.",
-            )
+            raise InvalidToken()
 
         token_payload = Authentication().decode_token(token)
 

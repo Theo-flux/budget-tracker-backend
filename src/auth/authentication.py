@@ -1,13 +1,14 @@
-from fastapi import Depends
-from passlib.context import CryptContext
-from datetime import datetime, timedelta
-import jwt
-from jwt import PyJWTError, ExpiredSignatureError
-import uuid
 import logging
+import uuid
+from datetime import datetime, timedelta
+
+import jwt
+from jwt import ExpiredSignatureError, PyJWTError
+from passlib.context import CryptContext
 
 from src.config import Config
 from src.utils.exceptions import InvalidToken, TokenExpired
+
 from .schemas import TokenUserModel
 
 
@@ -25,22 +26,16 @@ class Authentication:
         return Authentication.password_context.verify(password, hash)
 
     @staticmethod
-    def create_token(
-        user_data: TokenUserModel, expiry: timedelta = None, refresh: bool = False
-    ):
+    def create_token(user_data: TokenUserModel, expiry: timedelta = None, refresh: bool = False):
         payload = {}
 
         payload["user"] = user_data
         payload["exp"] = datetime.now() + (
-            expiry
-            if expiry is not None
-            else timedelta(seconds=Authentication.ACCESS_TOKEN_EXPIRY)
+            expiry if expiry is not None else timedelta(seconds=Authentication.ACCESS_TOKEN_EXPIRY)
         )
         payload["jti"] = str(uuid.uuid4())
         payload["refresh"] = refresh
-        token = jwt.encode(
-            payload=payload, key=Config.JWT_SECRET, algorithm=Config.JWT_ALGORITHM
-        )
+        token = jwt.encode(payload=payload, key=Config.JWT_SECRET, algorithm=Config.JWT_ALGORITHM)
 
         return token
 

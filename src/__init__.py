@@ -1,9 +1,10 @@
-from fastapi import FastAPI, status
 from contextlib import asynccontextmanager
 
+from fastapi import FastAPI, status
+
+from src.auth.routers import auth_router
 from src.db.main import init_db
 from src.users.routers import user_router
-from src.auth.routers import auth_router
 from src.utils.exceptions import (
     AccessTokenRequired,
     InvalidToken,
@@ -43,39 +44,27 @@ app.add_exception_handler(
 )
 app.add_exception_handler(
     UserNotFound,
-    create_exception_handler(
-        status.HTTP_404_NOT_FOUND, {"message": "User doesn't exist."}
-    ),
+    create_exception_handler(status.HTTP_404_NOT_FOUND, {"message": "User doesn't exist."}),
 )
 app.add_exception_handler(
     WrongCredentials,
-    create_exception_handler(
-        status.HTTP_404_NOT_FOUND, {"message": "Wrong email or password."}
-    ),
+    create_exception_handler(status.HTTP_404_NOT_FOUND, {"message": "Wrong email or password."}),
 )
 app.add_exception_handler(
     UserPhoneNumberExists,
-    create_exception_handler(
-        status.HTTP_409_CONFLICT, {"message": "User with phone number already exist."}
-    ),
+    create_exception_handler(status.HTTP_409_CONFLICT, {"message": "User with phone number already exist."}),
 )
 app.add_exception_handler(
     UserEmailExists,
-    create_exception_handler(
-        status.HTTP_409_CONFLICT, {"message": "User with email already exist."}
-    ),
+    create_exception_handler(status.HTTP_409_CONFLICT, {"message": "User with email already exist."}),
 )
 app.add_exception_handler(
     AccessTokenRequired,
-    create_exception_handler(
-        status.HTTP_403_FORBIDDEN, {"message": "Provide an access token."}
-    ),
+    create_exception_handler(status.HTTP_403_FORBIDDEN, {"message": "Provide an access token."}),
 )
 app.add_exception_handler(
     RefreshTokenRequired,
-    create_exception_handler(
-        status.HTTP_403_FORBIDDEN, {"message": "Provide a refresh token."}
-    ),
+    create_exception_handler(status.HTTP_403_FORBIDDEN, {"message": "Provide a refresh token."}),
 )
 
 app.include_router(auth_router, prefix=f"/api/{version}/auth", tags=["auth"])

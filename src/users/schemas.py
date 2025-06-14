@@ -1,7 +1,8 @@
+import uuid
 from datetime import datetime
 from typing import Optional
+
 from pydantic import BaseModel, EmailStr, Field, field_validator
-import uuid
 
 from src.utils.validators import email_validator
 

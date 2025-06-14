@@ -1,19 +1,16 @@
 from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
-from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
+from src.auth.authentication import Authentication
 from src.auth.schemas import LoginResModel, TokenUserModel
 from src.db.models import User
-from src.utils.exceptions import (
-    UserEmailExists,
-    UserPhoneNumberExists,
-    WrongCredentials,
-)
-from src.utils.validators import is_email
-from .schemas import CreateUserModel, LoginUserModel
 from src.misc.schemas import ServerErrorModel, ServerRespModel
-from src.auth.authentication import Authentication
+from src.utils.exceptions import UserEmailExists, UserNotFound, UserPhoneNumberExists, WrongCredentials
+from src.utils.validators import is_email
+
+from .schemas import CreateUserModel, LoginUserModel
 
 auth_handler = Authentication()
 
@@ -43,11 +40,7 @@ class UserService:
         return False if user is None else True
 
     async def login_user(self, login_data: LoginUserModel, session: AsyncSession):
-        if (
-            not login_data.password
-            or not login_data.password.strip()
-            or not login_data.email.strip()
-        ):
+        if not login_data.password or not login_data.password.strip() or not login_data.email.strip():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=ServerErrorModel[str](
@@ -59,7 +52,7 @@ class UserService:
         user = await self.get_user_by_email(login_data.email, session)
 
         if user is None:
-            raise UserEmailExists()
+            raise UserNotFound()
 
         if auth_handler.verify_password(login_data.password, user.password):
             user_data = TokenUserModel.model_validate(user)
@@ -98,7 +91,5 @@ class UserService:
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content=ServerRespModel[bool](
-                data=True, message="user created successfully."
-            ),
+            content=ServerRespModel[bool](data=True, message="user created successfully.").model_dump(),
         )

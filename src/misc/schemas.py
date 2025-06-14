@@ -1,6 +1,6 @@
 from typing import Generic, TypeVar
-from pydantic import BaseModel
 
+from pydantic import BaseModel
 
 T = TypeVar("T")
 
@@ -29,7 +29,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
 
 
 class ServerErrorModel(BaseModel, Generic[T]):
-    error: T
+    error_code: T
     message: str
 
     class Config:
