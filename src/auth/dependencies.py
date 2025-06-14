@@ -3,7 +3,8 @@ from fastapi import HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from src.auth.authentication import Authentication
-from src.database.redis import token_in_block_list
+from src.db.redis import token_in_block_list
+from src.utils.exceptions import AccessTokenRequired, InvalidToken, RefreshTokenRequired
 
 
 class TokenBearer(HTTPBearer):
@@ -34,10 +35,7 @@ class TokenBearer(HTTPBearer):
         token_payload = Authentication().decode_token(token)
 
         if token_in_block_list(token_payload["jti"]):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="This token is invalid. Pls get a new token.",
-            )
+            raise InvalidToken()
 
         self.verify_token_data(token_payload)
 
@@ -50,16 +48,10 @@ class TokenBearer(HTTPBearer):
 class AccessTokenBearer(TokenBearer):
     def verify_token_data(self, token_payload):
         if token_payload and token_payload["refresh"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Provide an access token.",
-            )
+            raise AccessTokenRequired()
 
 
 class RefreshTokenBearer(TokenBearer):
     def verify_token_data(self, token_payload):
         if token_payload and not token_payload["refresh"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Provide a refresh token.",
-            )
+            raise RefreshTokenRequired()

@@ -6,7 +6,7 @@ from src.auth.schemas import TokenUserModel
 
 from .authentication import Authentication
 from src.misc.schemas import ServerRespModel
-from src.database.redis import add_jti_to_block_list
+from src.db.redis import add_jti_to_block_list
 from src.users.service import UserService
 
 user_service = UserService()

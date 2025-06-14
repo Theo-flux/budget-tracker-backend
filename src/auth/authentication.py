@@ -7,6 +7,7 @@ import uuid
 import logging
 
 from src.config import Config
+from src.utils.exceptions import InvalidToken, TokenExpired
 from .schemas import TokenUserModel
 
 
@@ -56,7 +57,7 @@ class Authentication:
             return token_payload
         except ExpiredSignatureError:
             logging.warning("Token has expired.")
-            raise Exception("Token has expired.")
+            raise TokenExpired()
         except PyJWTError:
             logging.exception("JWT decoding failed.")
-            raise Exception("Invalid token.")
+            raise InvalidToken()

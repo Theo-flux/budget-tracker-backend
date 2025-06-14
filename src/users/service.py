@@ -4,8 +4,12 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 
 from src.auth.schemas import LoginResModel, TokenUserModel
-
-from .models import User
+from src.db.models import User
+from src.utils.exceptions import (
+    UserEmailExists,
+    UserPhoneNumberExists,
+    WrongCredentials,
+)
 from src.utils.validators import is_email
 from .schemas import CreateUserModel, LoginUserModel
 from src.misc.schemas import ServerErrorModel, ServerRespModel
@@ -55,13 +59,7 @@ class UserService:
         user = await self.get_user_by_email(login_data.email, session)
 
         if user is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=ServerErrorModel[str](
-                    error="user with email doesn't exist",
-                    message="user with email doesn't exist",
-                ).model_dump(),
-            )
+            raise UserEmailExists()
 
         if auth_handler.verify_password(login_data.password, user.password):
             user_data = TokenUserModel.model_validate(user)
@@ -81,34 +79,16 @@ class UserService:
                 ).model_dump(),
             )
 
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=ServerErrorModel[str](
-                error="email or password is wrong",
-                message="email or password is wrong",
-            ).model_dump(),
-        )
+        raise WrongCredentials()
 
     async def create_user(self, user_data: CreateUserModel, session: AsyncSession):
         user = user_data.model_dump()
 
         if await self.get_user_by_email(user.get("email"), session):
-            raise HTTPException(
-                status_code=status.HTTP_406_NOT_ACCEPTABLE,
-                detail=ServerErrorModel[str](
-                    error="user with email already exist",
-                    message="user with email already exist",
-                ).model_dump(),
-            )
+            raise UserEmailExists()
 
         if await self.get_user_by_phone(user.get("phone_number"), session):
-            raise HTTPException(
-                status_code=status.HTTP_406_NOT_ACCEPTABLE,
-                detail=ServerErrorModel[str](
-                    error="user with phone number already exist",
-                    message="user with phone number already exist",
-                ).model_dump(),
-            )
+            raise UserPhoneNumberExists()
 
         user["password"] = Authentication().generate_password_hash(user["password"])
         new_user = User(**user)

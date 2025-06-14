@@ -7,7 +7,7 @@ from src.users.service import UserService
 from src.auth.dependencies import AccessTokenBearer, RefreshTokenBearer
 from src.misc.schemas import ServerRespModel
 from src.users.schemas import CreateUserModel, LoginUserModel
-from src.database.main import get_session
+from src.db.main import get_session
 
 auth_router = APIRouter()
 
