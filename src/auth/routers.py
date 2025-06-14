@@ -1,39 +1,63 @@
-from fastapi import APIRouter, Depends, status, Body
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, Query, status, Body
+from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.auth.schemas import TokenModel
+from src.auth.schemas import LoginResModel, TokenUserModel
 from src.auth.service import AuthService
 from src.users.service import UserService
-from src.auth.dependencies import RefreshTokenBearer
+from src.auth.dependencies import AccessTokenBearer, RefreshTokenBearer
 from src.misc.schemas import ServerRespModel
-from src.users.schemas import CreateUserModel
+from src.users.schemas import CreateUserModel, LoginUserModel
 from src.database.main import get_session
 
-auth_router = APIRouter(prefix="/auth", tags=["auth"])
+auth_router = APIRouter()
 
 auth_service = AuthService()
 user_service = UserService()
 
 
 @auth_router.post(
-    "/login", status_code=status.HTTP_200_OK, response_model=ServerRespModel[TokenModel]
+    "/login",
+    status_code=status.HTTP_200_OK,
+    response_model=ServerRespModel[LoginResModel],
 )
-async def login():
-    pass
+async def login_user(
+    login_data: LoginUserModel = Body(...), session: AsyncSession = Depends(get_session)
+):
+    return await user_service.login_user(login_data, session)
 
 
-@auth_router.get("/profile")
-async def get_profile():
-    pass
-
-
-@auth_router.post("/register", response_model=ServerRespModel[bool])
+@auth_router.post(
+    "/register",
+    status_code=status.HTTP_201_CREATED,
+    response_model=ServerRespModel[bool],
+)
 async def register_user(
     user: CreateUserModel = Body(...), session: AsyncSession = Depends(get_session)
 ):
     return await user_service.create_user(user, session)
 
 
-@auth_router.get("/new-access-token")
-async def new_access_token(token_details: dict = Depends(RefreshTokenBearer())):
-    pass
+@auth_router.get(
+    "/profile",
+    status_code=status.HTTP_200_OK,
+    response_model=ServerRespModel[TokenUserModel],
+)
+async def get_current_user_profile(
+    token_payload: dict = Depends(AccessTokenBearer()),
+    session: AsyncSession = Depends(get_session),
+):
+    return await auth_service.get_current_user(token_payload, session)
+
+
+@auth_router.get("/logout")
+async def revoke_user_token(token_payload: dict = Depends(AccessTokenBearer())):
+    return await auth_service.revoke_token(token_payload)
+
+
+@auth_router.get(
+    "/new-access-token", status_code=status.HTTP_200_OK, response_model=ServerRespModel
+)
+async def get_new_user_access_token(
+    token_payload: dict = Depends(RefreshTokenBearer()),
+):
+    return await auth_service.new_access_token(token_payload)

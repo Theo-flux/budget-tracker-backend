@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, EmailStr, Field, field_validator
+import uuid
 
 from src.utils.validators import email_validator
 
@@ -30,9 +31,14 @@ class LoginUserModel(BaseModel):
 
 class UserResponseModel(BaseModel):
     id: int
-    name: str
+    uuid: uuid.UUID
+    first_name: str
+    last_name: str
     avatar: Optional[str]
     email: str
+    phone_number: str
+    is_email_verified: bool
+    is_phone_number_verified: bool
     created_at: datetime
     updated_at: datetime
 

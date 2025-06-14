@@ -7,6 +7,7 @@ import uuid
 import logging
 
 from src.config import Config
+from .schemas import TokenUserModel
 
 
 class Authentication:
@@ -19,11 +20,13 @@ class Authentication:
         return Authentication.password_context.hash(password)
 
     @staticmethod
-    def verify_password(hash: str, password: str) -> bool:
+    def verify_password(password: str, hash: str) -> bool:
         return Authentication.password_context.verify(password, hash)
 
     @staticmethod
-    def create_token(user_data: dict, expiry: timedelta = None, refresh: bool = False):
+    def create_token(
+        user_data: TokenUserModel, expiry: timedelta = None, refresh: bool = False
+    ):
         payload = {}
 
         payload["user"] = user_data
@@ -43,11 +46,14 @@ class Authentication:
     @staticmethod
     def decode_token(token: str):
         try:
-            token_data = jwt.decode(
-                jwt=token, key=Config.JWT_SECRET, algorithms=[Config.JWT_ALGORITHM]
+            token_payload = jwt.decode(
+                jwt=token,
+                key=Config.JWT_SECRET,
+                algorithms=[Config.JWT_ALGORITHM],
+                verify=True,
             )
 
-            return token_data
+            return token_payload
         except ExpiredSignatureError:
             logging.warning("Token has expired.")
             raise Exception("Token has expired.")

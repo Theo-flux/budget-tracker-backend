@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 from typing import Optional
 from pydantic import EmailStr
 from sqlmodel import SQLModel, Field
-import sqlalchemy.dialects.postgresql as pg
 import uuid
 
 
@@ -17,7 +16,7 @@ class User(SQLModel, table=True):
     last_name: str = Field(...)
     email: EmailStr = Field(...)
     phone_number: str = Field(...)
-    password: str = Field(exclude=True)
+    password: str = Field(...)
     avatar: Optional[str] = Field(default="")
     is_email_verified: bool = Field(default=False)
     is_phone_number_verified: bool = Field(default=False)

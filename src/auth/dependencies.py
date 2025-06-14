@@ -1,9 +1,9 @@
 from typing import Optional
 from fastapi import HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jwt import ExpiredSignatureError, InvalidTokenError
 
 from src.auth.authentication import Authentication
+from src.database.redis import token_in_block_list
 
 
 class TokenBearer(HTTPBearer):
@@ -31,19 +31,25 @@ class TokenBearer(HTTPBearer):
                 detail="Invalid or expired token.",
             )
 
-        token_data = Authentication().decode_token(token)
+        token_payload = Authentication().decode_token(token)
 
-        self.verify_token_data(token_data)
+        if token_in_block_list(token_payload["jti"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This token is invalid. Pls get a new token.",
+            )
 
-        return token_data
+        self.verify_token_data(token_payload)
 
-    def verify_token_data(self, token_data) -> None:
+        return token_payload
+
+    def verify_token_data(self, token_payload) -> None:
         raise NotImplementedError("Please override this method in child classes.")
 
 
 class AccessTokenBearer(TokenBearer):
-    def verify_token_data(self, token_data):
-        if token_data and token_data["refresh"]:
+    def verify_token_data(self, token_payload):
+        if token_payload and token_payload["refresh"]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Provide an access token.",
@@ -51,8 +57,8 @@ class AccessTokenBearer(TokenBearer):
 
 
 class RefreshTokenBearer(TokenBearer):
-    def verify_token_data(self, token_data):
-        if token_data and not token_data["refresh"]:
+    def verify_token_data(self, token_payload):
+        if token_payload and not token_payload["refresh"]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Provide a refresh token.",
