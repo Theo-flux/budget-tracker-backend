@@ -7,7 +7,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.config import Config
 
-async_engine = AsyncEngine(create_engine(url=Config.DATABASE_URL, echo=True))
+async_engine = AsyncEngine(create_engine(url=Config.DATABASE_URL))
 
 
 async def init_db():

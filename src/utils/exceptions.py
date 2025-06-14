@@ -1,5 +1,6 @@
 from typing import Any, Callable, Dict
 
+from fastapi import FastAPI, status
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 
@@ -68,3 +69,37 @@ def create_exception_handler(
         )
 
     return exception_handler
+
+
+def register_exceptions(app: FastAPI):
+    app.add_exception_handler(
+        InvalidToken,
+        create_exception_handler(
+            status.HTTP_403_FORBIDDEN,
+            {"message": "This token is invalid or expired. Pls get a new token."},
+        ),
+    )
+    app.add_exception_handler(
+        UserNotFound,
+        create_exception_handler(status.HTTP_404_NOT_FOUND, {"message": "User doesn't exist."}),
+    )
+    app.add_exception_handler(
+        WrongCredentials,
+        create_exception_handler(status.HTTP_404_NOT_FOUND, {"message": "Wrong email or password."}),
+    )
+    app.add_exception_handler(
+        UserPhoneNumberExists,
+        create_exception_handler(status.HTTP_409_CONFLICT, {"message": "User with phone number already exist."}),
+    )
+    app.add_exception_handler(
+        UserEmailExists,
+        create_exception_handler(status.HTTP_409_CONFLICT, {"message": "User with email already exist."}),
+    )
+    app.add_exception_handler(
+        AccessTokenRequired,
+        create_exception_handler(status.HTTP_403_FORBIDDEN, {"message": "Provide an access token."}),
+    )
+    app.add_exception_handler(
+        RefreshTokenRequired,
+        create_exception_handler(status.HTTP_403_FORBIDDEN, {"message": "Provide a refresh token."}),
+    )
