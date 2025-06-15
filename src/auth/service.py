@@ -2,11 +2,11 @@ from fastapi import status
 from fastapi.responses import JSONResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.auth.schemas import TokenUserModel
+from src.auth.schemas import ResetPwdModel, TokenUserModel
 from src.db.redis import add_jti_to_block_list
 from src.misc.schemas import ServerRespModel
 from src.users.service import UserService
-from src.utils.exceptions import UserNotFound
+from src.utils.exceptions import InvalidLink, UserNotFound
 from src.utils.mail import Mailer
 
 from .authentication import Authentication
@@ -58,7 +58,7 @@ class AuthService:
 
             if user.is_email_verified:
                 return JSONResponse(
-                    status_code=status.HTTP_208_ALREADY_REPORTED,
+                    status_code=status.HTTP_200_OK,
                     content=ServerRespModel[bool](data=True, message="Account already verified").model_dump(),
                 )
 
@@ -70,17 +70,17 @@ class AuthService:
             )
 
         return JSONResponse(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_200_OK,
             content=ServerRespModel[bool](
-                data=False, message="A Verification link will be sent if email exists in our data base."
+                data=True, message="A Verification link will be sent if email exists in our data base."
             ).model_dump(),
         )
 
     async def verify_account(self, token: str, session: AsyncSession):
         token_data = Authentication.decode_url_safe_token(token=token)
-        email = token_data.get("email")
 
-        if email:
+        if token_data["email"]:
+            email = token_data["email"]
             user = await user_service.get_user_by_email(email=email, session=session)
 
             if not user:
@@ -88,7 +88,7 @@ class AuthService:
 
             if user.is_email_verified:
                 return JSONResponse(
-                    status_code=status.HTTP_208_ALREADY_REPORTED,
+                    status_code=status.HTTP_200_OK,
                     content=ServerRespModel[bool](data=True, message="Account already verified").model_dump(),
                 )
 
@@ -99,7 +99,54 @@ class AuthService:
                 content=ServerRespModel[bool](data=True, message="Account verification successful.").model_dump(),
             )
 
+        raise InvalidLink()
+
+    async def forgot_pwd(self, email: str, session: AsyncSession):
+        user = await user_service.get_user_by_email(email=email, session=session)
+
+        if not user:
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content=ServerRespModel[bool](
+                    data=True, message="A password reset link will be sent to this email if it exists in our database."
+                ).model_dump(),
+            )
+
+        if user.is_email_verified:
+            reset_user = user.model_dump()
+            await Mailer.send_password_reset(email=reset_user["email"], first_name=reset_user["first_name"])
+
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content=ServerRespModel[bool](
+                    data=True, message="A password reset link will be sent to this email if it exists in our database."
+                ).model_dump(),
+            )
+
         return JSONResponse(
-            status_code=status.HTTP_404_NOT_FOUND,
-            content=ServerRespModel[bool](data=False, message="Invalid or expired verification token.").model_dump(),
+            status_code=status.HTTP_200_OK,
+            content=ServerRespModel[bool](data=True, message="Account needs to be verified.").model_dump(),
         )
+
+    async def update_pwd(self, token: str, data: ResetPwdModel, session: AsyncSession):
+        token_data = Authentication.decode_url_safe_token(token=token)
+
+        if token_data:
+            email = token_data["email"]
+            user = await user_service.get_user_by_email(email=email, session=session)
+
+            if not user:
+                raise UserNotFound()
+
+            await user_service.update_user(
+                user=user,
+                user_data={"password": Authentication.generate_password_hash(data.model_dump().get("new_password"))},
+                session=session,
+            )
+
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content=ServerRespModel[bool](data=True, message="Password reset successful.").model_dump(),
+            )
+
+        raise InvalidLink()

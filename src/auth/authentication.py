@@ -8,7 +8,7 @@ from jwt import ExpiredSignatureError, PyJWTError
 from passlib.context import CryptContext
 
 from src.config import Config
-from src.utils.exceptions import ExpiredEmailVerificationLink, InvalidEmailVerificationLink, InvalidToken, TokenExpired
+from src.utils.exceptions import ExpiredLink, InvalidLink, InvalidToken, TokenExpired
 
 from .schemas import TokenUserModel
 
@@ -69,10 +69,10 @@ class Authentication:
             return Authentication.serializer.loads(token, max_age=Authentication.PWD_RESET_TOKEN_EXPIRY)
         except SignatureExpired:
             logging.error("Token expired")
-            ExpiredEmailVerificationLink()
+            raise ExpiredLink()
         except BadSignature:
             logging.error("Invalid token")
-            InvalidEmailVerificationLink()
+            raise InvalidLink()
         except Exception as e:
             logging.error(f"Unexpected error: {e}")
-            InvalidEmailVerificationLink()
+            raise InvalidLink()

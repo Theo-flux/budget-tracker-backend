@@ -82,3 +82,17 @@ class Mailer:
         )
 
         await mail.send_message(message=message, template_name=EmailTypes.EMAIL_VERIFICATION.template)
+
+    @staticmethod
+    async def send_password_reset(email: str, first_name: str):
+        token_payload = {"email": email}
+        email_token = Authentication.create_url_safe_token(token_payload)
+        verification_url = f"http://localhost:8000/api/v1/auth/pwd-reset/{email_token}"
+
+        message = Mailer._create_message(
+            recipients=[email],
+            subject=EmailTypes.PWD_RESET.subject,
+            template_body={"first_name": first_name, "reset_url": verification_url},
+        )
+
+        await mail.send_message(message=message, template_name=EmailTypes.PWD_RESET.template)

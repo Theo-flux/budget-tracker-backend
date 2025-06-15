@@ -11,7 +11,6 @@ class ServerRespModel(BaseModel, Generic[T]):
     message: str
 
     class Config:
-        # This makes the model accept arbitrary types for the generic T
         arbitrary_types_allowed = True
 
 
@@ -34,7 +33,6 @@ class ServerErrorModel(BaseModel, Generic[T]):
     message: str
 
     class Config:
-        # This makes the model accept arbitrary types for the generic T
         arbitrary_types_allowed = True
 
 

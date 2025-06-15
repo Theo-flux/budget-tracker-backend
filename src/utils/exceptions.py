@@ -59,14 +59,14 @@ class RefreshTokenRequired(AppException):
     pass
 
 
-class ExpiredEmailVerificationLink(AppException):
-    """This handles expired verification token"""
+class ExpiredLink(AppException):
+    """This handles expired password reset token"""
 
     pass
 
 
-class InvalidEmailVerificationLink(AppException):
-    """This handles invalid verification token"""
+class InvalidLink(AppException):
+    """This handles invalid password reset token"""
 
     pass
 
@@ -116,10 +116,10 @@ def register_exceptions(app: FastAPI):
         create_exception_handler(status.HTTP_403_FORBIDDEN, {"message": "Provide a refresh token."}),
     )
     app.add_exception_handler(
-        ExpiredEmailVerificationLink,
-        create_exception_handler(status.HTTP_403_FORBIDDEN, {"message": "Verification link expired. get a new one"}),
+        ExpiredLink,
+        create_exception_handler(status.HTTP_403_FORBIDDEN, {"message": "Link expired. get a new one"}),
     )
     app.add_exception_handler(
-        InvalidEmailVerificationLink,
-        create_exception_handler(status.HTTP_403_FORBIDDEN, {"message": "Verification link is invalid. get a new one"}),
+        InvalidLink,
+        create_exception_handler(status.HTTP_403_FORBIDDEN, {"message": "Link is invalid. get a new one"}),
     )

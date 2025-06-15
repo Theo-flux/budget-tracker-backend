@@ -17,7 +17,7 @@ class ForgotPwdModel(BaseModel):
 
 
 class ResetPwdModel(BaseModel):
-    password: str
+    new_password: str
 
 
 class UserResponseModel(BaseModel):

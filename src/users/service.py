@@ -104,7 +104,7 @@ class UserService:
         )
 
     async def update_user(self, user: User, user_data: dict, session: AsyncSession):
-        allowed_fields = ["first_name", "last_name", "is_email_verified", "is_phone_number_verified"]
+        allowed_fields = ["first_name", "last_name", "is_email_verified", "is_phone_number_verified", "password"]
 
         for field in allowed_fields:
             value = user_data.get(field)
