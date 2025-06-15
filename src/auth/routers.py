@@ -1,4 +1,7 @@
+from typing import List
+
 from fastapi import APIRouter, Body, Depends, status
+from pydantic import EmailStr
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.auth.dependencies import AccessTokenBearer, RefreshTokenBearer
@@ -8,11 +11,23 @@ from src.db.main import get_session
 from src.misc.schemas import ServerRespModel
 from src.users.schemas import CreateUserModel, LoginUserModel
 from src.users.service import UserService
+from src.utils.mail import create_message, mail
 
 auth_router = APIRouter()
 
 auth_service = AuthService()
 user_service = UserService()
+
+
+@auth_router.post("/send-mail")
+async def send_mail(recipients: List[EmailStr] = Body(...)):
+    html = "<h1>Hello, world! from fastapi template.</h1>"
+
+    message = create_message(recipients=recipients, subject="Sending a test mail", body=html)
+
+    await mail.send_message(message=message)
+
+    return {"message": "Email sent!"}
 
 
 @auth_router.post(

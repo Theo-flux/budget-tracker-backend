@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime, timedelta
 
 import jwt
+from itsdangerous import URLSafeTimedSerializer
 from jwt import ExpiredSignatureError, PyJWTError
 from passlib.context import CryptContext
 
@@ -16,6 +17,7 @@ class Authentication:
     password_context = CryptContext(schemes=["bcrypt"])
     ACCESS_TOKEN_EXPIRY = 84000
     PWD_RESET_TOKEN_EXPIRY = 3600
+    serializer: URLSafeTimedSerializer = URLSafeTimedSerializer(secret_key=Config.JWT_SECRET, salt=Config.EMAIL_SALT)
 
     @staticmethod
     def generate_password_hash(password: str) -> str:
@@ -56,3 +58,14 @@ class Authentication:
         except PyJWTError:
             logging.exception("JWT decoding failed.")
             raise InvalidToken()
+
+    @staticmethod
+    def create_url_safe_token(data: dict):
+        return Authentication.serializer.dumps(data)
+
+    @staticmethod
+    def decode_url_safe_token(self, token: str):
+        try:
+            return Authentication.serializer.loads(token)
+        except Exception as e:
+            logging.error(e)

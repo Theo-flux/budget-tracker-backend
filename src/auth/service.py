@@ -38,7 +38,7 @@ class AuthService:
         )
 
     async def new_access_token(self, token_payload: dict):
-        new_access_token = Authentication().create_token(token_payload["user"])
+        new_access_token = Authentication.create_token(token_payload["user"])
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content=ServerRespModel(

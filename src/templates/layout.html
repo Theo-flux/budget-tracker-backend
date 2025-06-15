@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{% block title %}{% endblock %}</title>
+  </head>
+  <body>
+    <center style="width: 100%; max-width: 780px; table-layout: fixed; background-color: #f4f4f4; padding-bottom: 40px; margin: auto;">
+      <table style="background-color: #f4f4f4; width: 100%; margin: 0; max-width: 604px; border-spacing: 0; font-family: sans-serif; color: #232323;" width="100%">
+        <!-- Logo Section -->
+        <tr>
+            <td>
+                {% include 'header.html' %}
+            </td>
+        </tr>
+        
+        <!-- Content Section -->
+        <tr>
+            <td>
+              {% block content %}{% endblock %}
+            </td>
+        </tr>
+
+        <!-- Footer Section -->
+        <tr>
+          <td>
+            {% include 'footer.html' %}
+          </td>
+        </tr>
+    </table>
+   </center>
+  </body>
+</html>

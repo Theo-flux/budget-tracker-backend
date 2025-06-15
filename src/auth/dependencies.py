@@ -16,7 +16,7 @@ class TokenBearer(HTTPBearer):
 
     def is_token_valid(self, token: str) -> bool:
         try:
-            token = Authentication().decode_token(token)
+            token = Authentication.decode_token(token)
             return True
         except Exception:
             return False
@@ -28,7 +28,7 @@ class TokenBearer(HTTPBearer):
         if self.is_token_valid(token) is False:
             raise InvalidToken()
 
-        token_payload = Authentication().decode_token(token)
+        token_payload = Authentication.decode_token(token)
 
         if token_in_block_list(token_payload["jti"]):
             raise InvalidToken()

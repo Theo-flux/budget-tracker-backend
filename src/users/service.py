@@ -6,13 +6,12 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.auth.authentication import Authentication
 from src.auth.schemas import LoginResModel, TokenUserModel
 from src.db.models import User
-from src.misc.schemas import ServerErrorModel, ServerRespModel
+from src.misc.schemas import EmailTypes, ServerErrorModel, ServerRespModel
 from src.utils.exceptions import UserEmailExists, UserNotFound, UserPhoneNumberExists, WrongCredentials
+from src.utils.mail import create_message, mail
 from src.utils.validators import is_email
 
 from .schemas import CreateUserModel, LoginUserModel
-
-auth_handler = Authentication()
 
 
 class UserService:
@@ -54,10 +53,10 @@ class UserService:
         if user is None:
             raise UserNotFound()
 
-        if auth_handler.verify_password(login_data.password, user.password):
+        if Authentication.verify_password(login_data.password, user.password):
             user_data = TokenUserModel.model_validate(user)
-            access_token = auth_handler.create_token(user_data)
-            refresh_token = auth_handler.create_token(user_data=user_data, refresh=True)
+            access_token = Authentication.create_token(user_data)
+            refresh_token = Authentication.create_token(user_data=user_data, refresh=True)
 
             return JSONResponse(
                 status_code=status.HTTP_200_OK,
@@ -83,13 +82,26 @@ class UserService:
         if await self.get_user_by_phone(user.get("phone_number"), session):
             raise UserPhoneNumberExists()
 
-        user["password"] = Authentication().generate_password_hash(user["password"])
+        user["password"] = Authentication.generate_password_hash(user["password"])
         new_user = User(**user)
 
         session.add(new_user)
         await session.commit()
 
+        email_token = Authentication.create_url_safe_token({"email": user.get("email")})
+        verification_url = f"http://localhost:8000/api/v1/auth/verify/{email_token}"
+
+        message = create_message(
+            recipients=[user.get("email")],
+            subject=EmailTypes.EMAIL_VERIFICATION.subject,
+            template_body={"first_name": user.get("first_name"), "verification_url": verification_url},
+        )
+
+        await mail.send_message(message=message, template_name=EmailTypes.EMAIL_VERIFICATION.template)
+
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content=ServerRespModel[bool](data=True, message="user created successfully.").model_dump(),
+            content=ServerRespModel[bool](
+                data=True, message="Account created! A mail has been sent to your inbox for verification."
+            ).model_dump(),
         )
