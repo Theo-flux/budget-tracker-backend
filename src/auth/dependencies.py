@@ -30,7 +30,7 @@ class TokenBearer(HTTPBearer):
 
         token_payload = Authentication.decode_token(token)
 
-        if token_in_block_list(token_payload["jti"]):
+        if await token_in_block_list(token_payload["jti"]):
             raise InvalidToken()
 
         self.verify_token_data(token_payload)

@@ -31,9 +31,12 @@ class Authentication:
     def create_token(user_data: TokenUserModel, expiry: timedelta = None, refresh: bool = False):
         payload = {}
 
-        payload["user"] = user_data.model_dump_json()
-        payload["exp"] = datetime.now() + (
-            expiry if expiry is not None else timedelta(seconds=Authentication.ACCESS_TOKEN_EXPIRY)
+        payload["user"] = user_data.model_dump(mode="json")
+        payload["exp"] = int(
+            (
+                datetime.now()
+                + (expiry if expiry is not None else timedelta(seconds=Authentication.ACCESS_TOKEN_EXPIRY))
+            ).timestamp()
         )
         payload["jti"] = str(uuid.uuid4())
         payload["refresh"] = refresh

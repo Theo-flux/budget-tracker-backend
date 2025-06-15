@@ -123,3 +123,10 @@ def register_exceptions(app: FastAPI):
         InvalidLink,
         create_exception_handler(status.HTTP_403_FORBIDDEN, {"message": "Link is invalid. get a new one"}),
     )
+
+    @app.exception_handler(status.HTTP_500_INTERNAL_SERVER_ERROR)
+    async def internal_server_error(request: Request, exc):
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"message": "A 500 error exception occured!", "error_code": "InternalServerError"},
+        )

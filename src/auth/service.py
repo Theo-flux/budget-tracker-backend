@@ -15,7 +15,7 @@ user_service = UserService()
 
 
 class AuthService:
-    async def get_current_user(token_payload: dict, session: AsyncSession):
+    async def get_current_user(self, token_payload: dict, session: AsyncSession):
         user_email = token_payload["user"]["email"]
         user = await user_service.get_user_by_email(user_email, session)
 
@@ -24,7 +24,7 @@ class AuthService:
             content=ServerRespModel[TokenUserModel](
                 data=TokenUserModel.model_validate(user).model_dump(),
                 message="user profile retrieved",
-            ),
+            ).model_dump(mode="json"),
         )
 
     async def revoke_token(self, token_payload: dict):
@@ -36,7 +36,7 @@ class AuthService:
             content=ServerRespModel(
                 data=True,
                 message="logged out successfully.",
-            ),
+            ).model_dump(),
         )
 
     async def new_access_token(self, token_payload: dict):
