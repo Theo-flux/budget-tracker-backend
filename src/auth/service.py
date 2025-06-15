@@ -6,6 +6,8 @@ from src.auth.schemas import TokenUserModel
 from src.db.redis import add_jti_to_block_list
 from src.misc.schemas import ServerRespModel
 from src.users.service import UserService
+from src.utils.exceptions import UserNotFound
+from src.utils.mail import Mailer
 
 from .authentication import Authentication
 
@@ -45,4 +47,59 @@ class AuthService:
                 data={"access_token": new_access_token},
                 message="new access token generated.",
             ),
+        )
+
+    async def new_verify_token(self, email: str, session: AsyncSession):
+        if email:
+            user = await user_service.get_user_by_email(email=email, session=session)
+
+            if not user:
+                raise UserNotFound()
+
+            if user.is_email_verified:
+                return JSONResponse(
+                    status_code=status.HTTP_208_ALREADY_REPORTED,
+                    content=ServerRespModel[bool](data=True, message="Account already verified").model_dump(),
+                )
+
+            await Mailer.send_email_verification(email=user.get("email"), first_name=user.get("first_name"))
+
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content=ServerRespModel[bool](data=True, message="Verification link sent!").model_dump(),
+            )
+
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content=ServerRespModel[bool](
+                data=False, message="A Verification link will be sent if email exists in our data base."
+            ).model_dump(),
+        )
+
+    async def verify_account(self, token: str, session: AsyncSession):
+        token_data = Authentication.decode_url_safe_token(token=token)
+        email = token_data.get("email")
+
+        if email:
+            user = await user_service.get_user_by_email(email=email, session=session)
+
+            if not user:
+                raise UserNotFound()
+
+            if user.is_email_verified:
+                return JSONResponse(
+                    status_code=status.HTTP_208_ALREADY_REPORTED,
+                    content=ServerRespModel[bool](data=True, message="Account already verified").model_dump(),
+                )
+
+            await user_service.update_user(user=user, user_data={"is_email_verified": True}, session=session)
+
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content=ServerRespModel[bool](data=True, message="Account verification successful.").model_dump(),
+            )
+
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content=ServerRespModel[bool](data=False, message="Invalid or expired verification token.").model_dump(),
         )

@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Body, Depends, status
+from fastapi import APIRouter, Body, Depends, Query, status
 from pydantic import EmailStr
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -70,3 +70,13 @@ async def get_new_user_access_token(
     token_payload: dict = Depends(RefreshTokenBearer()),
 ):
     return await auth_service.new_access_token(token_payload)
+
+
+@auth_router.get("/verify/{token}")
+async def verify_account(token: str, session: AsyncSession = Depends(get_session)):
+    return await auth_service.verify_account(token=token, session=session)
+
+
+@auth_router.post("/new-verify-token")
+async def new_verify_token(email: str = Query(...), session: AsyncSession = Depends(get_session)):
+    return await auth_service.new_verify_token(email=email, session=session)

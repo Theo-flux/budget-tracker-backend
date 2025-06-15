@@ -31,7 +31,7 @@ class Authentication:
     def create_token(user_data: TokenUserModel, expiry: timedelta = None, refresh: bool = False):
         payload = {}
 
-        payload["user"] = user_data
+        payload["user"] = user_data.model_dump_json()
         payload["exp"] = datetime.now() + (
             expiry if expiry is not None else timedelta(seconds=Authentication.ACCESS_TOKEN_EXPIRY)
         )

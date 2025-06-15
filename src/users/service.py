@@ -46,19 +46,34 @@ class UserService:
 
         if Authentication.verify_password(login_data.password, user.password):
             user_data = TokenUserModel.model_validate(user)
-            access_token = Authentication.create_token(user_data)
-            refresh_token = Authentication.create_token(user_data=user_data, refresh=True)
+
+            if user_data.is_email_verified:
+                access_token = Authentication.create_token(user_data)
+                refresh_token = Authentication.create_token(user_data=user_data, refresh=True)
+
+                return JSONResponse(
+                    status_code=status.HTTP_200_OK,
+                    content=ServerRespModel[LoginResModel](
+                        data={
+                            "access_token": access_token,
+                            "refresh_token": refresh_token,
+                            "is_email_verified": user_data.is_email_verified,
+                            "is_phone_number_verified": user_data.is_phone_number_verified,
+                        },
+                        message="user token generated.",
+                    ).model_dump(),
+                )
 
             return JSONResponse(
                 status_code=status.HTTP_200_OK,
                 content=ServerRespModel[LoginResModel](
                     data={
-                        "access_token": access_token,
-                        "refresh_token": refresh_token,
+                        "access_token": "",
+                        "refresh_token": "",
                         "is_email_verified": user_data.is_email_verified,
                         "is_phone_number_verified": user_data.is_phone_number_verified,
                     },
-                    message="user logged in successfully.",
+                    message="user account not verified.",
                 ).model_dump(),
             )
 
@@ -87,3 +102,15 @@ class UserService:
                 data=True, message="Account created! A mail has been sent to your inbox for verification."
             ).model_dump(),
         )
+
+    async def update_user(self, user: User, user_data: dict, session: AsyncSession):
+        allowed_fields = ["first_name", "last_name", "is_email_verified", "is_phone_number_verified"]
+
+        for field in allowed_fields:
+            value = user_data.get(field)
+            if value is not None:
+                setattr(user, field, value)
+
+        await session.commit()
+        await session.refresh(user)
+        return user

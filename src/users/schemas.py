@@ -54,3 +54,10 @@ class UserResponseModel(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UpdateUserModel(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    is_email_verified: Optional[bool] = None
+    is_phone_number_verified: Optional[bool] = None

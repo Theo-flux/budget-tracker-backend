@@ -44,7 +44,7 @@ class LoginResModel(TokenModel):
 
 class TokenUserModel(BaseModel):
     id: int
-    uuid: uuid.UUID
+    uid: uuid.UUID
     first_name: str
     last_name: str
     avatar: Optional[str]
@@ -53,4 +53,4 @@ class TokenUserModel(BaseModel):
     is_email_verified: bool
     is_phone_number_verified: bool
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, json_encoders={uuid.UUID: lambda v: str(v)})
