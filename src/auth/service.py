@@ -40,13 +40,13 @@ class AuthService:
         )
 
     async def new_access_token(self, token_payload: dict):
-        new_access_token = Authentication.create_token(token_payload["user"])
+        new_access_token = Authentication.create_token(TokenUserModel.model_validate(token_payload["user"]))
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content=ServerRespModel(
                 data={"access_token": new_access_token},
                 message="new access token generated.",
-            ),
+            ).model_dump(),
         )
 
     async def new_verify_token(self, email: str, session: AsyncSession):
