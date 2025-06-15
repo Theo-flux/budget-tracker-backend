@@ -27,7 +27,16 @@ class LoginUserModel(BaseModel):
     @field_validator("email")
     @classmethod
     def validate_email(cls, value):
+        if not value.strip():
+            raise ValueError("Email must not be empty")
         return email_validator(value)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value):
+        if not value.strip():
+            raise ValueError("Password must not be empty")
+        return value
 
 
 class UserResponseModel(BaseModel):

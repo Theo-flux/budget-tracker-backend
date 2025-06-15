@@ -59,6 +59,18 @@ class RefreshTokenRequired(AppException):
     pass
 
 
+class ExpiredEmailVerificationLink(AppException):
+    """This handles expired verification token"""
+
+    pass
+
+
+class InvalidEmailVerificationLink(AppException):
+    """This handles invalid verification token"""
+
+    pass
+
+
 def create_exception_handler(
     status_code: int, extra_content: Dict[str, Any] = None
 ) -> Callable[[Request, Exception], JSONResponse]:
@@ -102,4 +114,12 @@ def register_exceptions(app: FastAPI):
     app.add_exception_handler(
         RefreshTokenRequired,
         create_exception_handler(status.HTTP_403_FORBIDDEN, {"message": "Provide a refresh token."}),
+    )
+    app.add_exception_handler(
+        ExpiredEmailVerificationLink,
+        create_exception_handler(status.HTTP_403_FORBIDDEN, {"message": "Verification link expired. get a new one"}),
+    )
+    app.add_exception_handler(
+        InvalidEmailVerificationLink,
+        create_exception_handler(status.HTTP_403_FORBIDDEN, {"message": "Verification link is invalid. get a new one"}),
     )

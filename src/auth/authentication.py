@@ -3,12 +3,12 @@ import uuid
 from datetime import datetime, timedelta
 
 import jwt
-from itsdangerous import URLSafeTimedSerializer
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from jwt import ExpiredSignatureError, PyJWTError
 from passlib.context import CryptContext
 
 from src.config import Config
-from src.utils.exceptions import InvalidToken, TokenExpired
+from src.utils.exceptions import ExpiredEmailVerificationLink, InvalidEmailVerificationLink, InvalidToken, TokenExpired
 
 from .schemas import TokenUserModel
 
@@ -64,8 +64,15 @@ class Authentication:
         return Authentication.serializer.dumps(data)
 
     @staticmethod
-    def decode_url_safe_token(self, token: str):
+    def decode_url_safe_token(token: str):
         try:
-            return Authentication.serializer.loads(token)
+            return Authentication.serializer.loads(token, max_age=Authentication.PWD_RESET_TOKEN_EXPIRY)
+        except SignatureExpired:
+            logging.error("Token expired")
+            ExpiredEmailVerificationLink()
+        except BadSignature:
+            logging.error("Invalid token")
+            InvalidEmailVerificationLink()
         except Exception as e:
-            logging.error(e)
+            logging.error(f"Unexpected error: {e}")
+            InvalidEmailVerificationLink()

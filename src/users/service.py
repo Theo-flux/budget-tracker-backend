@@ -1,4 +1,4 @@
-from fastapi import HTTPException, status
+from fastapi import status
 from fastapi.responses import JSONResponse
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -6,9 +6,9 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.auth.authentication import Authentication
 from src.auth.schemas import LoginResModel, TokenUserModel
 from src.db.models import User
-from src.misc.schemas import EmailTypes, ServerErrorModel, ServerRespModel
+from src.misc.schemas import ServerRespModel
 from src.utils.exceptions import UserEmailExists, UserNotFound, UserPhoneNumberExists, WrongCredentials
-from src.utils.mail import create_message, mail
+from src.utils.mail import Mailer
 from src.utils.validators import is_email
 
 from .schemas import CreateUserModel, LoginUserModel
@@ -39,15 +39,6 @@ class UserService:
         return False if user is None else True
 
     async def login_user(self, login_data: LoginUserModel, session: AsyncSession):
-        if not login_data.password or not login_data.password.strip() or not login_data.email.strip():
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=ServerErrorModel[str](
-                    error="provide an email/password pls.",
-                    message="provide an email/password pls.",
-                ).model_dump(),
-            )
-
         user = await self.get_user_by_email(login_data.email, session)
 
         if user is None:
@@ -88,16 +79,7 @@ class UserService:
         session.add(new_user)
         await session.commit()
 
-        email_token = Authentication.create_url_safe_token({"email": user.get("email")})
-        verification_url = f"http://localhost:8000/api/v1/auth/verify/{email_token}"
-
-        message = create_message(
-            recipients=[user.get("email")],
-            subject=EmailTypes.EMAIL_VERIFICATION.subject,
-            template_body={"first_name": user.get("first_name"), "verification_url": verification_url},
-        )
-
-        await mail.send_message(message=message, template_name=EmailTypes.EMAIL_VERIFICATION.template)
+        await Mailer.send_email_verification(email=user.get("email"), first_name=user.get("first_name"))
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,

@@ -5,7 +5,9 @@ from fastapi import UploadFile
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from pydantic import EmailStr
 
+from src.auth.authentication import Authentication
 from src.config import Config
+from src.misc.schemas import EmailTypes
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 
@@ -43,3 +45,40 @@ def create_message(
     )
 
     return message
+
+
+class Mailer:
+    mail = FastMail(config=mail_config)
+
+    @staticmethod
+    def _create_message(
+        recipients: List[EmailStr],
+        attachments: List[Union[UploadFile, Dict, str]] = [],
+        subject: str = "",
+        body: Optional[Union[List, str]] = None,
+        template_body: Optional[Union[List, str]] = None,
+    ) -> MessageSchema:
+        message = MessageSchema(
+            recipients=recipients,
+            attachments=attachments,
+            subject=subject,
+            body=body,
+            template_body=template_body,
+            subtype=MessageType.html,
+        )
+
+        return message
+
+    @staticmethod
+    async def send_email_verification(email: str, first_name: str):
+        token_payload = {"email": email}
+        email_token = Authentication.create_url_safe_token(token_payload)
+        verification_url = f"http://localhost:8000/api/v1/auth/verify/{email_token}"
+
+        message = Mailer._create_message(
+            recipients=[email],
+            subject=EmailTypes.EMAIL_VERIFICATION.subject,
+            template_body={"first_name": first_name, "verification_url": verification_url},
+        )
+
+        await mail.send_message(message=message, template_name=EmailTypes.EMAIL_VERIFICATION.template)
