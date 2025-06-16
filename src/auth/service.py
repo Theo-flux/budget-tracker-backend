@@ -2,12 +2,14 @@ from fastapi import status
 from fastapi.responses import JSONResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.auth.schemas import ResetPwdModel, TokenUserModel
+from src.auth.schemas import LoginResModel, ResetPwdModel, TokenUserModel
+from src.db.models import User
 from src.db.redis import add_jti_to_block_list
 from src.misc.schemas import ServerRespModel
 from src.tasks.email_tasks import send_email_verification_task, send_password_reset_task
+from src.users.schemas import CreateUserModel, LoginUserModel
 from src.users.service import UserService
-from src.utils.exceptions import InvalidLink, UserNotFound
+from src.utils.exceptions import InvalidLink, UserEmailExists, UserNotFound, UserPhoneNumberExists, WrongCredentials
 
 from .authentication import Authentication
 
@@ -152,3 +154,68 @@ class AuthService:
             )
 
         raise InvalidLink()
+
+    async def login_user(self, login_data: LoginUserModel, session: AsyncSession):
+        user = await user_service.get_user_by_email(login_data.email, session)
+
+        if user is None:
+            raise UserNotFound()
+
+        if Authentication.verify_password(login_data.password, user.password):
+            user_data = TokenUserModel.model_validate(user)
+
+            if user_data.is_email_verified:
+                access_token = Authentication.create_token(user_data)
+                refresh_token = Authentication.create_token(user_data=user_data, refresh=True)
+
+                return JSONResponse(
+                    status_code=status.HTTP_200_OK,
+                    content=ServerRespModel[LoginResModel](
+                        data={
+                            "access_token": access_token,
+                            "refresh_token": refresh_token,
+                            "is_email_verified": user_data.is_email_verified,
+                            "is_phone_number_verified": user_data.is_phone_number_verified,
+                        },
+                        message="user token generated.",
+                    ).model_dump(),
+                )
+
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content=ServerRespModel[LoginResModel](
+                    data={
+                        "access_token": "",
+                        "refresh_token": "",
+                        "is_email_verified": user_data.is_email_verified,
+                        "is_phone_number_verified": user_data.is_phone_number_verified,
+                    },
+                    message="user account not verified.",
+                ).model_dump(),
+            )
+
+        raise WrongCredentials()
+
+    async def create_user(self, user_data: CreateUserModel, session: AsyncSession):
+        user = user_data.model_dump()
+
+        if await user_service.get_user_by_email(user.get("email"), session):
+            raise UserEmailExists()
+
+        if await user_service.get_user_by_phone(user.get("phone_number"), session):
+            raise UserPhoneNumberExists()
+
+        user["password"] = Authentication.generate_password_hash(user["password"])
+        new_user = User(**user)
+
+        session.add(new_user)
+        await session.commit()
+
+        send_email_verification_task.delay(email=user.get("email"), first_name=user.get("first_name"))
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=ServerRespModel[bool](
+                data=True, message="Account created! A mail has been sent to your inbox for verification."
+            ).model_dump(),
+        )

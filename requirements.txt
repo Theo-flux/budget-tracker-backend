@@ -35,6 +35,7 @@ httpx==0.28.1
 humanize==4.12.3
 identify==2.6.12
 idna==3.10
+iniconfig==2.1.0
 isort==6.0.1
 itsdangerous==2.2.0
 Jinja2==3.1.6
@@ -50,16 +51,18 @@ packaging==25.0
 passlib==1.7.4
 pathspec==0.12.1
 platformdirs==4.3.8
+pluggy==1.6.0
 pre_commit==4.2.0
 prometheus_client==0.22.1
 prompt_toolkit==3.0.51
 pycodestyle==2.13.0
-pydantic==2.11.5
+pydantic==2.11.7
 pydantic-settings==2.9.1
 pydantic_core==2.33.2
 pyflakes==3.3.2
 Pygments==2.19.1
 PyJWT==2.10.1
+pytest==8.4.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.0
 python-multipart==0.0.20

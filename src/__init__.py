@@ -21,8 +21,12 @@ version = "v1"
 
 app = FastAPI(
     title="FastAPI Template",
-    description="A template for my FASTAPI apps to make things very easy for me whenever I am starting a new project.",
+    description="A REST API Template with authentication fully implemented and custom email templates.",
     version=version,
+    license_info={"name": "MIT", "url": "https://opensource.org/licenses/mit"},
+    contact={"name": "Theo Flux", "email": "tifluse@gmail.com", "url": "https://github.com/Theo-flux/fast-template"},
+    docs_url=f"/api/{version}/docs",
+    openapi_url=f"/api/{version}/openapi.json",
     lifespan=life_span,
 )
 

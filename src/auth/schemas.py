@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_serializer, field_validator
 
 from src.utils.validators import email_validator
 
@@ -28,8 +28,7 @@ class UserResponseModel(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TokenModel(BaseModel):
@@ -53,4 +52,6 @@ class TokenUserModel(BaseModel):
     is_email_verified: bool
     is_phone_number_verified: bool
 
-    model_config = ConfigDict(from_attributes=True, json_encoders={uuid.UUID: lambda v: str(v)})
+    @field_serializer("uid")
+    def serialize_uid(self, value: uuid.UUID, _info):
+        return str(value)

@@ -10,13 +10,10 @@ from src.auth.service import AuthService
 from src.db.main import get_session
 from src.misc.schemas import ServerRespModel
 from src.users.schemas import CreateUserModel, LoginUserModel
-from src.users.service import UserService
 from src.utils.mail import create_message, mail
 
 auth_router = APIRouter()
-
 auth_service = AuthService()
-user_service = UserService()
 
 
 @auth_router.post("/send-mail")
@@ -36,7 +33,7 @@ async def send_mail(recipients: List[EmailStr] = Body(...)):
     response_model=ServerRespModel[LoginResModel],
 )
 async def login_user(login_data: LoginUserModel = Body(...), session: AsyncSession = Depends(get_session)):
-    return await user_service.login_user(login_data, session)
+    return await auth_service.login_user(login_data, session)
 
 
 @auth_router.post(
@@ -45,7 +42,7 @@ async def login_user(login_data: LoginUserModel = Body(...), session: AsyncSessi
     response_model=ServerRespModel[bool],
 )
 async def register_user(user: CreateUserModel = Body(...), session: AsyncSession = Depends(get_session)):
-    return await user_service.create_user(user, session)
+    return await auth_service.create_user(user, session)
 
 
 @auth_router.get(

@@ -1,7 +1,7 @@
 from typing import Generic, List, TypeVar
 
 from fastapi import UploadFile
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 T = TypeVar("T")
 
@@ -10,8 +10,7 @@ class ServerRespModel(BaseModel, Generic[T]):
     data: T
     message: str
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 # Pagination metadata model
@@ -32,8 +31,7 @@ class ServerErrorModel(BaseModel, Generic[T]):
     error_code: T
     message: str
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class EmailType:
