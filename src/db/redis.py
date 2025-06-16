@@ -1,13 +1,13 @@
 import logging
 
-import aioredis
+import redis.asyncio as aioredis
 
 from src.config import Config
 
 token_block_list = None
 
 try:
-    token_block_list = aioredis.StrictRedis(host=Config.REDIS_HOST, port=Config.REDIS_PORT, db=0)
+    token_block_list = aioredis.from_url(url=f"redis://{Config.REDIS_HOST}:{Config.REDIS_PORT}/0")
 except ConnectionError:
     print("Redis not available. Skipping blocklist feature.")
 

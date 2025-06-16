@@ -5,9 +5,9 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.auth.schemas import ResetPwdModel, TokenUserModel
 from src.db.redis import add_jti_to_block_list
 from src.misc.schemas import ServerRespModel
+from src.tasks.email_tasks import send_email_verification_task, send_password_reset_task
 from src.users.service import UserService
 from src.utils.exceptions import InvalidLink, UserNotFound
-from src.utils.mail import Mailer
 
 from .authentication import Authentication
 
@@ -18,6 +18,9 @@ class AuthService:
     async def get_current_user(self, token_payload: dict, session: AsyncSession):
         user_email = token_payload["user"]["email"]
         user = await user_service.get_user_by_email(user_email, session)
+
+        if not user:
+            raise UserNotFound()
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
@@ -49,7 +52,7 @@ class AuthService:
             ).model_dump(),
         )
 
-    async def new_verify_token(self, email: str, session: AsyncSession):
+    async def resend_verify_token(self, email: str, session: AsyncSession):
         if email:
             user = await user_service.get_user_by_email(email=email, session=session)
 
@@ -62,7 +65,7 @@ class AuthService:
                     content=ServerRespModel[bool](data=True, message="Account already verified").model_dump(),
                 )
 
-            await Mailer.send_email_verification(email=user.get("email"), first_name=user.get("first_name"))
+            send_email_verification_task.delay(email=user.get("email"), first_name=user.get("first_name"))
 
             return JSONResponse(
                 status_code=status.HTTP_200_OK,
@@ -113,8 +116,7 @@ class AuthService:
             )
 
         if user.is_email_verified:
-            reset_user = user.model_dump()
-            await Mailer.send_password_reset(email=reset_user["email"], first_name=reset_user["first_name"])
+            send_password_reset_task.delay(email=user.email, first_name=user.first_name)
 
             return JSONResponse(
                 status_code=status.HTTP_200_OK,

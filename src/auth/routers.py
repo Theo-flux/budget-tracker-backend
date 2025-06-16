@@ -77,9 +77,9 @@ async def verify_account(token: str, session: AsyncSession = Depends(get_session
     return await auth_service.verify_account(token=token, session=session)
 
 
-@auth_router.post("/new-verify-token", status_code=status.HTTP_200_OK, response_model=ServerRespModel[bool])
-async def new_verify_token(email: str = Query(...), session: AsyncSession = Depends(get_session)):
-    return await auth_service.new_verify_token(email=email, session=session)
+@auth_router.post("/resend-verify-token", status_code=status.HTTP_200_OK, response_model=ServerRespModel[bool])
+async def resend_verify_token(email: str = Query(...), session: AsyncSession = Depends(get_session)):
+    return await auth_service.resend_verify_token(email=email, session=session)
 
 
 @auth_router.get("/forgot_pwd", status_code=status.HTTP_200_OK, response_model=ServerRespModel[bool])

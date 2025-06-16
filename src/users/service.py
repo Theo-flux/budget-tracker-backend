@@ -7,8 +7,8 @@ from src.auth.authentication import Authentication
 from src.auth.schemas import LoginResModel, TokenUserModel
 from src.db.models import User
 from src.misc.schemas import ServerRespModel
+from src.tasks.email_tasks import send_email_verification_task
 from src.utils.exceptions import UserEmailExists, UserNotFound, UserPhoneNumberExists, WrongCredentials
-from src.utils.mail import Mailer
 from src.utils.validators import is_email
 
 from .schemas import CreateUserModel, LoginUserModel
@@ -94,7 +94,8 @@ class UserService:
         session.add(new_user)
         await session.commit()
 
-        await Mailer.send_email_verification(email=user.get("email"), first_name=user.get("first_name"))
+        # Call the Celery task asynchronously
+        send_email_verification_task.delay(email=user.get("email"), first_name=user.get("first_name"))
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
