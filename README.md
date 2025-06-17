@@ -71,20 +71,31 @@ A powerful and scalable FastAPI template built with real-world architecture in m
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/your-username/fastapi-template.git
+git clone https://github.com/Theo-flux/fast-template.git
 cd fastapi-template
 ```
 
 ### 2. Create your `.env` file
 
 ```env
-DATABASE_URL=postgresql+asyncpg://user:password@db:5432/app_db
-SECRET_KEY=your-secret-key
-SMTP_USERNAME=your@email.com
-SMTP_PASSWORD=your-password
+DATABASE_URL=postgresql+asyncpg://<user>:<password>@<host>:<port>/<db>
+JWT_SECRET=<secret>
+JWT_ALGORITHM=<ALGORITHM>
+
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+MAIL_USERNAME=<username>
+MAIL_PASSWORD=<password>
+MAIL_FROM=<gmail>
+MAIL_PORT=465
+MAIL_SERVER=smtp.gmail.com
+MAIL_FROM_NAME=<username>
+
+EMAIL_SALT=<salt string>
 ```
 
-* FastAPI: [http://localhost:8000](http://localhost:8000)
+* FastAPI: [http://localhost:8000/api/v1/docs](http://localhost:8000/api/v1/docs)
 * Flower: [http://localhost:5555](http://localhost:5555) (task monitor)
 
 ---
