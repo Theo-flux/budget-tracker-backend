@@ -33,5 +33,6 @@ app = FastAPI(
 register_exceptions(app)
 register_middlewares(app)
 
+
 app.include_router(auth_router, prefix=f"/api/{version}/auth", tags=["auth"])
 app.include_router(user_router, prefix=f"/api/{version}/users", tags=["user"])

@@ -1,6 +1,7 @@
 from fastapi import status
 from fastapi.responses import JSONResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
+from starlette_context import context
 
 from src.auth.schemas import LoginResModel, ResetPwdModel, TokenUserModel
 from src.db.models import User
@@ -211,7 +212,9 @@ class AuthService:
         session.add(new_user)
         await session.commit()
 
-        send_email_verification_task.delay(email=user.get("email"), first_name=user.get("first_name"))
+        send_email_verification_task.delay(
+            email=user.get("email"), first_name=user.get("first_name"), base_url=context.get("base_url")
+        )
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,

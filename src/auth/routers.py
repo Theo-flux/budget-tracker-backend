@@ -19,7 +19,6 @@ auth_service = AuthService()
 @auth_router.post("/send-mail")
 async def send_mail(recipients: List[EmailStr] = Body(...)):
     html = "<h1>Hello, world! from fastapi template.</h1>"
-
     message = create_message(recipients=recipients, subject="Sending a test mail", body=html)
 
     await mail.send_message(message=message)

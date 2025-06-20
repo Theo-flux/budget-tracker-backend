@@ -70,10 +70,10 @@ class Mailer:
         return message
 
     @staticmethod
-    async def send_email_verification(email: str, first_name: str):
+    async def send_email_verification(email: str, first_name: str, base_url: str):
         token_payload = {"email": email}
         email_token = Authentication.create_url_safe_token(token_payload)
-        verification_url = f"http://localhost:8000/api/v1/auth/verify/{email_token}"
+        verification_url = f"{base_url}api/v1/auth/verify/{email_token}"
 
         message = Mailer._create_message(
             recipients=[email],
@@ -84,10 +84,10 @@ class Mailer:
         await Mailer.mail.send_message(message=message, template_name=EmailTypes.EMAIL_VERIFICATION.template)
 
     @staticmethod
-    async def send_password_reset(email: str, first_name: str):
+    async def send_password_reset(email: str, first_name: str, base_url: str):
         token_payload = {"email": email}
         email_token = Authentication.create_url_safe_token(token_payload)
-        reset_url = f"http://localhost:8000/api/v1/auth/pwd-reset/{email_token}"
+        reset_url = f"{base_url}api/v1/auth/pwd-reset/{email_token}"
 
         message = Mailer._create_message(
             recipients=[email],
