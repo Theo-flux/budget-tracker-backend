@@ -20,6 +20,16 @@ class ResetPwdModel(BaseModel):
     new_password: str
 
 
+class ChangePwdModel(BaseModel):
+    new_password: str
+    email: str
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value):
+        return email_validator(value)
+
+
 class UserResponseModel(BaseModel):
     id: int
     name: str
@@ -49,8 +59,6 @@ class TokenUserModel(BaseModel):
     avatar: Optional[str]
     email: str
     phone_number: str
-    is_email_verified: bool
-    is_phone_number_verified: bool
 
     @field_serializer("uid")
     def serialize_uid(self, value: uuid.UUID, _info):

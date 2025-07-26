@@ -17,8 +17,6 @@ class User(SQLModel, table=True):
     phone_number: str = Field(...)
     password: str = Field(...)
     avatar: Optional[str] = Field(default="")
-    is_email_verified: bool = Field(default=False)
-    is_phone_number_verified: bool = Field(default=False)
     created_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True)),
         default_factory=lambda: datetime.now(timezone.utc),

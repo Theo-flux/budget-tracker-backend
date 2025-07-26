@@ -20,8 +20,8 @@ async def life_span(app: FastAPI):
 version = "v1"
 
 app = FastAPI(
-    title="FastAPI Template",
-    description="A REST API Template with authentication fully implemented and custom email templates.",
+    title="SRH Expense Tracker",
+    description="A REST API for SRH Expense tracker",
     version=version,
     license_info={"name": "MIT", "url": "https://opensource.org/licenses/mit"},
     contact={"name": "Theo Flux", "email": "tifluse@gmail.com", "url": "https://github.com/Theo-flux/fast-template"},
